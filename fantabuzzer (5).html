@@ -1,0 +1,1236 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
+<title>Fantabuzzer</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Archivo:wght@600;700&family=Archivo+Black&family=Inter:wght@400;500;700&display=swap" rel="stylesheet">
+<style>
+/* ===== BEGIN TOKEN ===== */
+:root{
+  --notte:#061530;
+  --fondo:#0A1F44;
+  --fondo-alto:#12305F;
+  --linea:#1E4A85;
+  --brand:#2B7BFF;
+  --brand-tenue:#7FB2FF;
+  --vivo:#FFFFFF;
+  --ok:#22D97F;
+  --allarme:#FF7A6B;
+  --carta:#EAF2FF;
+  --carta-fioca:#8AA6CE;
+  --display:'Archivo Black',Impact,sans-serif;
+  --testo:'Inter',system-ui,-apple-system,sans-serif;
+}
+/* ===== END TOKEN ===== */
+
+*{box-sizing:border-box;margin:0;padding:0}
+html,body{height:100%}
+body{
+  background:
+    radial-gradient(1100px 620px at 50% -12%, #16407F 0%, transparent 62%),
+    var(--notte);
+  color:var(--carta);font-family:var(--testo);font-variant-numeric:tabular-nums;
+  -webkit-tap-highlight-color:transparent;overflow-x:hidden;
+}
+button{font-family:inherit;color:inherit;border:0;background:none;cursor:pointer}
+input{font-family:inherit;font-size:16px}
+:focus-visible{outline:2px solid var(--brand);outline-offset:2px}
+.schermo{display:none;min-height:100vh}
+.schermo.attivo{display:block}
+
+.testata{display:flex;align-items:center;justify-content:space-between;gap:12px;
+  padding:10px 16px;border-bottom:1px solid var(--linea);background:rgba(6,21,48,.7);backdrop-filter:blur(6px)}
+.marchio{font-family:var(--display);font-size:19px;letter-spacing:.02em;color:var(--brand)}
+.marchio span{color:var(--carta)}
+.meta{font-size:12px;color:var(--carta-fioca);letter-spacing:.08em;text-transform:uppercase}
+
+.centro{max-width:520px;margin:0 auto;padding:32px 20px 60px}
+.titolone{font-family:var(--display);font-size:clamp(42px,12vw,70px);line-height:.94;color:var(--vivo)}
+.titolone em{font-style:normal;color:var(--brand);display:block}
+.sottotitolo{color:var(--carta-fioca);margin:14px 0 28px;font-size:15px;line-height:1.5}
+.campo-label{display:block;font-size:12px;letter-spacing:.1em;text-transform:uppercase;color:var(--carta-fioca);margin:18px 0 6px}
+.campo-testo{width:100%;padding:14px 16px;background:var(--fondo);border:1px solid var(--linea);border-radius:10px;color:var(--carta)}
+.campo-testo::placeholder{color:#5878A8}
+.bottone{display:block;width:100%;padding:16px;border-radius:10px;margin-top:14px;font-weight:700;font-size:16px;background:var(--brand);color:#02122E}
+.bottone.fantasma{background:transparent;border:1px solid var(--linea);color:var(--carta)}
+.bottone.conferma{background:var(--ok);color:#022413}
+.bottone:disabled{opacity:.35;cursor:not-allowed}
+.nota{font-size:13px;color:var(--carta-fioca);margin-top:18px;line-height:1.5}
+.avviso{border:1px solid var(--allarme);background:rgba(255,122,107,.08);color:#FFD1CA;padding:12px 14px;border-radius:10px;font-size:13px;line-height:1.5;margin-bottom:20px}
+.avviso b{color:var(--allarme)}
+
+/* ---- banditore ---- */
+.plancia{display:grid;grid-template-columns:1fr 372px;gap:1px;background:var(--linea);min-height:calc(100vh - 48px)}
+.pannello{background:var(--notte);padding:20px}
+.riga-turno{display:flex;align-items:baseline;gap:10px;margin-bottom:8px;font-size:12px;letter-spacing:.14em;text-transform:uppercase;color:var(--carta-fioca)}
+.riga-turno b{font-family:var(--display);font-size:24px;letter-spacing:0;color:var(--brand);text-transform:none}
+.palco{display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;padding:10px 0}
+.vuoto-palco{color:var(--carta-fioca);font-size:15px;line-height:1.6;max-width:34ch;padding:60px 0}
+
+/* ===== BEGIN CAMPIONCINO ===== */
+.scena{perspective:1400px;width:min(236px,52vw)}
+.campioncino{
+  position:relative;width:100%;aspect-ratio:3/4;transform-style:preserve-3d;
+  transition:transform .85s cubic-bezier(.3,.9,.3,1);
+}
+.campioncino.girato{transform:rotateY(180deg)}
+.faccia{position:absolute;inset:0;backface-visibility:hidden;border-radius:16px;overflow:hidden;
+  border:1px solid rgba(255,255,255,.16);box-shadow:0 18px 44px rgba(0,0,0,.5)}
+.faccia.retro{transform:rotateY(180deg)}
+.faccia svg{width:100%;height:100%;display:block}
+.carta-foto{position:absolute;inset:0;background:linear-gradient(158deg,var(--k1) 0%,#0A1F44 74%)}
+.carta-foto img{position:absolute;left:50%;top:5%;transform:translateX(-50%);width:97%;height:80%;object-fit:contain;object-position:bottom}
+.carta-foto .barra{position:absolute;left:0;right:0;bottom:0;height:15%;background:rgba(6,21,48,.9);display:flex;align-items:center;padding:0 10px;font-weight:700;font-size:15px}
+.carta-foto .ruolo{position:absolute;left:6%;top:5%;width:14%;aspect-ratio:1;border-radius:8px;background:#EAF2FF;color:#0A1F44;display:grid;place-items:center;font-family:var(--display);font-size:15px}
+.carta-foto .club{position:absolute;right:6%;top:6.5%;font-size:10.5px;font-weight:700;letter-spacing:1.6px;opacity:.85}
+.entra{animation:entra .9s cubic-bezier(.2,.8,.25,1)}
+@keyframes entra{from{transform:rotateY(180deg) scale(.86);opacity:0}to{transform:rotateY(0) scale(1);opacity:1}}
+/* ===== END CAMPIONCINO ===== */
+
+.nome-giocatore{font-family:var(--display);font-size:clamp(30px,4.4vw,54px);line-height:1.02;margin-top:14px}
+.dettaglio-giocatore{margin-top:6px;font-size:13px;letter-spacing:.14em;text-transform:uppercase;color:var(--carta-fioca)}
+
+.quadrante{position:relative;width:min(210px,46vw);aspect-ratio:1;margin:14px 0 2px;display:grid;place-items:center}
+.quadrante svg{position:absolute;inset:0;width:100%;height:100%;transform:rotate(-90deg)}
+.anello-fondo{fill:none;stroke:var(--fondo-alto);stroke-width:5}
+.anello-tempo{fill:none;stroke:var(--brand);stroke-width:5;stroke-linecap:round}
+.anello-tempo.fermo{stroke:var(--ok)}
+.cifra{font-family:var(--display);font-size:clamp(48px,9vw,92px);line-height:1;color:var(--vivo);text-shadow:0 0 26px rgba(43,123,255,.75)}
+.cifra.battito{animation:battito .28s ease-out}
+@keyframes battito{0%{transform:scale(1)}38%{transform:scale(1.15)}100%{transform:scale(1)}}
+.offerente{margin-top:2px;font-size:15px;font-weight:700}
+.offerente small{display:block;font-weight:400;font-size:11px;letter-spacing:.14em;text-transform:uppercase;color:var(--carta-fioca);margin-bottom:3px}
+.fascia-stato{margin-top:12px;padding:7px 16px;border-radius:99px;font-size:12px;font-weight:700;letter-spacing:.12em;text-transform:uppercase;
+  background:rgba(34,217,127,.14);color:var(--ok);border:1px solid rgba(34,217,127,.4)}
+.comandi{display:flex;gap:10px;margin-top:18px;width:min(560px,92%)}
+.comandi .bottone{margin-top:0}
+
+.titolo-colonna{font-size:12px;letter-spacing:.14em;text-transform:uppercase;color:var(--carta-fioca);margin-bottom:12px}
+.squadra-riga{display:grid;grid-template-columns:1fr auto;gap:4px 10px;align-items:center;padding:10px 12px;
+  border:1px solid var(--linea);border-radius:8px;margin-bottom:8px;background:var(--fondo)}
+.squadra-riga.tocca{border-color:var(--brand);box-shadow:inset 3px 0 0 var(--brand)}
+.titolo-colonna{display:flex;align-items:center;justify-content:space-between}
+.mini{font-size:11px;letter-spacing:.08em;text-transform:uppercase;color:var(--carta-fioca);border:1px solid var(--linea);border-radius:6px;padding:4px 8px}
+.mini:hover{color:var(--allarme);border-color:var(--allarme)}
+.togli{width:24px;height:24px;border-radius:6px;color:var(--carta-fioca);font-size:16px;line-height:1;border:1px solid var(--linea)}
+.togli:hover{color:var(--allarme);border-color:var(--allarme)}
+.squadra-riga{grid-template-columns:1fr auto auto}
+.squadra-nome{font-weight:700;font-size:14px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.squadra-crediti{font-family:var(--display);font-size:19px;color:var(--brand-tenue)}
+.reparti{grid-column:1/-1;display:flex;gap:8px;font-size:11px;color:var(--carta-fioca)}
+.reparti span.pieno{color:var(--ok)}
+
+/* ---- telefono ---- */
+.telefono{max-width:520px;margin:0 auto;padding:16px 16px 32px}
+.barra-squadra{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:12px 14px;
+  border:1px solid var(--linea);border-radius:12px;background:var(--fondo)}
+.barra-squadra .n{font-weight:700;font-size:15px}
+.barra-squadra .c{font-family:var(--display);font-size:24px;color:var(--brand-tenue);line-height:1}
+.barra-squadra .c small{display:block;font-family:var(--testo);font-size:10px;letter-spacing:.12em;color:var(--carta-fioca);text-align:right}
+.stato-asta{text-align:center;padding:18px 0 12px;display:flex;flex-direction:column;align-items:center}
+.stato-asta .chi{font-size:11px;letter-spacing:.14em;text-transform:uppercase;color:var(--carta-fioca)}
+.stato-asta .nome{font-family:var(--display);font-size:clamp(26px,7.5vw,40px);line-height:1.05;margin:10px 0 2px}
+.stato-asta .sotto{font-size:12px;letter-spacing:.1em;text-transform:uppercase;color:var(--carta-fioca)}
+.stato-asta .prezzo{font-family:var(--display);font-size:58px;color:var(--vivo);line-height:1;margin-top:12px;text-shadow:0 0 22px rgba(43,123,255,.7)}
+.stato-asta .prezzo.battito{animation:battito .28s ease-out}
+.stato-asta .di{font-size:14px;font-weight:700;margin-top:4px}
+.rilanci{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:16px}
+.rilancio{padding:22px 0;border-radius:14px;background:var(--brand);color:#02122E;font-family:var(--display);font-size:28px}
+.rilancio.secondario{background:var(--fondo);border:1px solid var(--linea);color:var(--carta)}
+.rilancio:disabled{opacity:.28}
+.riga-libera{display:grid;grid-template-columns:1fr auto;gap:10px;margin-top:10px}
+.riga-libera .bottone{margin-top:0;width:auto;padding:14px 22px}
+.cerca-avvolto{margin-top:18px}
+.risultati{margin-top:8px;max-height:44vh;overflow-y:auto;border-radius:10px}
+.risultato{display:flex;align-items:center;justify-content:space-between;gap:10px;width:100%;padding:13px 14px;border-bottom:1px solid var(--linea);text-align:left}
+.risultato:disabled{opacity:.3}
+.risultato .r-nome{font-weight:700;font-size:15px}
+.risultato .r-club{font-size:12px;color:var(--carta-fioca)}
+.tag{font-family:var(--display);font-size:13px;width:26px;height:26px;border-radius:6px;display:grid;place-items:center;background:var(--fondo);border:1px solid var(--linea);flex:none}
+.tag.P{color:#FFC94D}.tag.D{color:#7FB2FF}.tag.C{color:#22D97F}.tag.A{color:#FF7A6B}
+.mia-rosa{margin-top:22px}
+.reparto{margin-bottom:14px}
+.reparto h4{font-size:11px;letter-spacing:.14em;text-transform:uppercase;color:var(--carta-fioca);margin-bottom:6px}
+.slot{display:flex;justify-content:space-between;gap:10px;padding:7px 10px;border-radius:6px;background:var(--fondo);margin-bottom:4px;font-size:14px}
+.slot.libero{background:transparent;border:1px dashed var(--linea);color:#3F5F92}
+.slot b{font-family:var(--display);color:var(--brand-tenue);font-weight:400}
+.msg{margin-top:12px;font-size:13px;color:var(--allarme);min-height:18px;text-align:center}
+
+@media (max-width:900px){.plancia{grid-template-columns:1fr}.quadrante{width:min(190px,50vw)}}
+@media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
+</style>
+</head>
+<body>
+
+<section id="s-home" class="schermo attivo">
+  <div class="testata"><div class="marchio">FANTA<span>BUZZER</span></div><div class="meta" id="modalita-attiva">—</div></div>
+  <div class="centro">
+    <h1 class="titolone">L'asta<em>senza urla</em></h1>
+    <p class="sottotitolo">Ognuno chiama e rilancia dal telefono. Il tabellone sta sulla TV. Alla fine le rose escono già pronte.</p>
+    <div id="avviso-config" class="avviso" hidden><b>Modalità prova.</b> Firebase non è configurato: la sincronizzazione funziona solo tra schede dello stesso browser. Ottimo per provare, inutilizzabile la sera dell'asta.</div>
+    <label class="campo-label" for="in-lega">Codice lega</label>
+    <input id="in-lega" class="campo-testo" placeholder="es. VALLEOLONA" autocomplete="off" spellcheck="false">
+    <button class="bottone" id="btn-banditore">Apri il tabellone (banditore)</button>
+    <button class="bottone fantasma" id="btn-giocatore">Entro come squadra</button>
+    <p class="nota">Il banditore apre il tabellone su TV o portatile. Tutti gli altri aprono lo stesso link sul telefono e scelgono «Entro come squadra», con lo stesso codice lega.</p>
+  </div>
+</section>
+
+<section id="s-banditore" class="schermo">
+  <div class="testata"><div class="marchio">FANTA<span>BUZZER</span></div>
+    <div class="meta"><span id="eco-lega"></span> · <span id="conta-squadre"></span></div></div>
+  <div class="plancia">
+    <div class="pannello">
+      <div class="riga-turno">Chiama <b id="chi-chiama">—</b></div>
+      <div class="palco">
+        <div id="palco-vuoto" class="vuoto-palco">Nessun giocatore all'asta. Tocca alla squadra di turno chiamare dal telefono.</div>
+        <div id="palco-pieno" hidden style="flex-direction:column;align-items:center">
+          <div class="scena"><div class="campioncino" id="carta"></div></div>
+          <div class="nome-giocatore" id="b-nome"></div>
+          <div class="dettaglio-giocatore" id="b-dett"></div>
+          <div class="quadrante">
+            <svg viewBox="0 0 100 100" aria-hidden="true">
+              <circle class="anello-fondo" cx="50" cy="50" r="46"></circle>
+              <circle class="anello-tempo" id="anello" cx="50" cy="50" r="46" stroke-dasharray="289" stroke-dashoffset="0"></circle>
+            </svg>
+            <div class="cifra" id="b-offerta">1</div>
+          </div>
+          <div class="offerente"><small id="b-etichetta">Offerta di</small><span id="b-offerente"></span></div>
+          <div class="fascia-stato" id="fascia" hidden>Tempo scaduto — pronto per la rosa</div>
+        </div>
+      </div>
+      <div class="comandi" id="comandi" hidden>
+        <button class="bottone conferma" id="btn-rosa">Metti in rosa</button>
+        <button class="bottone fantasma" id="btn-continua">Continua asta</button>
+        <button class="bottone fantasma" id="btn-annulla">Annulla chiamata</button>
+      </div>
+      <div class="comandi"><button class="bottone fantasma" id="btn-salta">Salta il turno</button></div>
+    </div>
+    <div class="pannello">
+      <div class="titolo-colonna"><span>Squadre</span><button class="mini" id="btn-azzera">Azzera lega</button></div>
+      <div id="lista-squadre"></div>
+    </div>
+  </div>
+</section>
+
+<section id="s-entrata" class="schermo">
+  <div class="testata"><div class="marchio">FANTA<span>BUZZER</span></div><div class="meta" id="eco-lega-2"></div></div>
+  <div class="centro">
+    <h1 class="titolone" style="font-size:clamp(32px,9vw,48px)">Come ti<em>chiami?</em></h1>
+    <label class="campo-label" for="in-squadra">Nome della tua fantasquadra</label>
+    <input id="in-squadra" class="campo-testo" placeholder="es. Sporting Olona" autocomplete="off" maxlength="24">
+    <button class="bottone" id="btn-entra">Entra nell'asta</button>
+    <div class="msg" id="msg-entrata"></div>
+    <div id="gia-dentro" style="margin-top:26px"></div>
+  </div>
+</section>
+
+<section id="s-telefono" class="schermo">
+  <div class="telefono">
+    <div class="barra-squadra">
+      <div class="n" id="t-nome-squadra"></div>
+      <div class="c" id="t-crediti">500<small>crediti</small></div>
+    </div>
+    <div id="t-asta" hidden>
+      <div class="stato-asta">
+        <div class="scena" style="width:min(150px,38vw)"><div class="campioncino" id="carta-t"></div></div>
+        <div class="chi" id="t-chi" style="margin-top:10px"></div>
+        <div class="nome" id="t-nome"></div>
+        <div class="sotto" id="t-sotto"></div>
+        <div class="prezzo" id="t-prezzo">1</div>
+        <div class="di" id="t-di"></div>
+      </div>
+      <div class="rilanci">
+        <button class="rilancio" data-passo="1">+1</button>
+        <button class="rilancio" data-passo="5">+5</button>
+      </div>
+      <div class="riga-libera">
+        <input id="in-offerta" class="campo-testo" type="number" inputmode="numeric" placeholder="Offerta secca">
+        <button class="bottone" id="btn-offri">Offri</button>
+      </div>
+      <div class="msg" id="t-msg"></div>
+    </div>
+    <div id="t-chiamata" hidden>
+      <div class="cerca-avvolto">
+        <label class="campo-label" for="in-cerca">Tocca a te: chiama un giocatore</label>
+        <input id="in-cerca" class="campo-testo" placeholder="Scrivi un cognome…" autocomplete="off" spellcheck="false">
+        <div class="risultati" id="risultati"></div>
+      </div>
+    </div>
+    <div id="t-attesa" hidden style="text-align:center;padding:34px 0">
+      <div style="font-size:11px;letter-spacing:.14em;text-transform:uppercase;color:var(--carta-fioca)">In attesa</div>
+      <div style="font-family:var(--display);font-size:28px;margin-top:8px;color:var(--brand)" id="t-attesa-chi"></div>
+    </div>
+    <div class="mia-rosa" id="t-rosa"></div>
+  </div>
+</section>
+
+<script>
+/* ===== BEGIN LISTONE ===== */
+/* Listone 2026/27, formato Leghe FC: id|nome|ruolo|squadra.
+   Per cambiare stagione sostituisci il contenuto di questa stringa. */
+const LISTONE_GREZZO = `4431|Carnesecchi|P|Atalanta
+2297|Rossi F.|P|Atalanta
+4|Sportiello|P|Atalanta
+787|Djimsiti|D|Atalanta
+6046|Hien|D|Atalanta
+5526|Scalvini|D|Atalanta
+5578|Kossounou|D|Atalanta
+2640|Kolasinac|D|Atalanta
+6916|Ahanor|D|Atalanta
+4887|Bellanova|D|Atalanta
+554|Zappacosta|D|Atalanta
+7219|Bernasconi|D|Atalanta
+22|De Roon|C|Atalanta
+5792|Ederson D.S.|C|Atalanta
+4364|Gaetano|C|Atalanta
+6024|Sulemana I.|C|Atalanta
+2077|Pasalic|C|Atalanta
+5119|Samardzic|C|Atalanta
+5422|Zalewski|C|Atalanta
+4896|Maldini|A|Cagliari
+5995|De Ketelaere|A|Atalanta
+5918|Sulemana K.|A|Atalanta
+4371|Raspadori|A|Atalanta
+6435|Krstovic|A|Atalanta
+2137|Scamacca|A|Atalanta
+7533|Happonen|P|Bologna
+7172|Pessina Mas.|P|Bologna
+133|Skorupski|P|Bologna
+5498|Casale|D|Bologna
+6042|Lucumì|D|Juventus
+7068|Vitik|D|Bologna
+7326|Helland|D|Bologna
+7212|Heggem|D|Bologna
+487|De Silvestri|D|Bologna
+5678|Holm|D|Bologna
+4433|Zortea|D|Bologna
+7483|Alhassane|D|Bologna
+4734|Miranda J.|D|Bologna
+7528|Amondarain|C|Bologna
+6225|El Azzouzi O.|C|Bologna
+5858|Ferguson|C|Bologna
+6054|Moro N.|C|Bologna
+5298|Pobega|C|Bologna
+184|Bernardeschi|C|Bologna
+6844|Rowe|C|Bologna
+2765|Odgaard|C|Bologna
+4436|Cambiaghi|C|Bologna
+6895|Dominguez B.|C|Sassuolo
+2167|Orsolini|C|Bologna
+6643|Dallinga|A|Bologna
+6675|Dovbyk|A|Bologna
+4360|Caprile|P|Cagliari
+4929|Ciocci|P|Cagliari
+6650|Sherri|P|Cagliari
+7532|Kofler|D|Cagliari
+4210|Mina|D|Cagliari
+7274|Zè Pedro|D|Cagliari
+7268|Rodriguez Ju.|D|Cagliari
+4461|Zappa|D|Cagliari
+5701|Obert|D|Cagliari
+7346|Raterink|D|Cagliari
+7125|Idrissi R.|D|Cagliari
+4870|Adopo|C|Cagliari
+1871|Deiola|C|Cagliari
+7165|Liteta|C|Cagliari
+6424|Prati|C|Cagliari
+7311|Romano|C|Cagliari
+4260|Winks|C|Cagliari
+6010|Fazzini|C|Cagliari
+6640|Felici|C|Cagliari
+7338|Albarracin|A|Cagliari
+4463|Esposito Se.|A|Cagliari
+6243|Borrelli|A|Cagliari
+7374|Mendy P.|A|Cagliari
+6598|Mutandwa|A|Cagliari
+7317|Trepy|A|Cagliari
+6966|Butez|P|Como
+7301|Tornqvist|P|Como
+2809|Vigorito|P|Como
+418|Goldaniga|D|Como
+6893|Kempf|D|Como
+6869|Ramon|D|Como
+7407|Cuenca A.|D|Como
+7014|Smolcic I.|D|Como
+6896|Van Der Brempt|D|Como
+7414|Kaiki|D|Como
+6867|Valle|D|Como
+7412|Milla|C|Como
+6151|Perrone|C|Como
+5036|Caqueret|C|Como
+5559|Da Cunha|C|Como
+7357|Lahdo|C|Como
+6815|Fadera|C|Cagliari
+7126|Baturina|C|Como
+6678|Liberali|C|Como
+7127|Addai|C|Como
+7129|Rodriguez Je.|C|Como
+6875|Paz N.|C|Como
+6967|Diao|A|Como
+7128|Kuhn|A|Como
+7027|Azon|A|Como
+7017|Douvikas|A|Como
+313|Morata|A|Como
+6403|Christensen O.|P|Fiorentina
+2521|De Gea|P|Fiorentina
+158|Lezzerini|P|Fiorentina
+5365|Dragusin|D|Fiorentina
+5603|Pongracic|D|Fiorentina
+4378|Ranieri L.|D|Fiorentina
+7294|Valdepenas|D|Fiorentina
+7410|Viery|D|Fiorentina
+5885|Dodò|D|Fiorentina
+7175|Joao Mario|D|Fiorentina
+5449|Parisi|D|Fiorentina
+6531|Jimenez A.|D|Fiorentina
+4465|Fagioli|C|Fiorentina
+7464|Oulai|C|Fiorentina
+1933|Mandragora|C|Fiorentina
+6294|Ndour|C|Fiorentina
+6908|Atta|C|Fiorentina
+4947|Brescianini|C|Fiorentina
+6206|Fabbian|C|Parma
+5800|Gudmundsson A.|C|Fiorentina
+2097|Kean|A|Fiorentina
+4359|Piccoli|A|Bologna
+7463|Desplanches|P|Frosinone
+7466|Lolic|P|Frosinone
+6415|Palmisani|P|Frosinone
+7540|Akpoguma|D|Frosinone
+5424|Amey|D|Frosinone
+7467|Calvani|D|Frosinone
+5757|Cittadini|D|Frosinone
+7468|Gelli J.|D|Frosinone
+4952|Monterisi|D|Frosinone
+7469|Bracaglia|D|Frosinone
+6238|Oyono A.|D|Frosinone
+7470|Oyono J.|D|Frosinone
+7471|Corrado|D|Frosinone
+7472|Calò|C|Frosinone
+7473|Cichella|C|Frosinone
+7456|El Azzouzi A.|C|Frosinone
+5725|Kone B.|C|Frosinone
+7474|Koutsoupias|C|Frosinone
+6241|Gelli F.|C|Frosinone
+6903|Hasa|C|Frosinone
+6506|Fini|C|Frosinone
+5998|Zerbin|C|Frosinone
+6530|Ghedjemis|A|Frosinone
+6204|Kvernadze|A|Frosinone
+5436|Raimondo|A|Frosinone
+7332|Bijlow|P|Genoa
+219|Sommariva|P|Genoa
+6569|Stolz|P|Genoa
+6660|Marcandalli|D|Genoa
+5750|Ostigard|D|Genoa
+6977|Otoa|D|Genoa
+6245|Vogliacco|D|Genoa
+6244|Matturro|D|Genoa
+5514|Vasquez|D|Genoa
+6814|Norton-Cuffy|D|Genoa
+2593|Martin|D|Genoa
+7537|Mitaj|D|Genoa
+7413|Puczka|D|Genoa
+791|Sabelli|D|Genoa
+6020|Ellertsson|C|Genoa
+7341|Amorim|C|Genoa
+5791|Frendrup|C|Genoa
+6917|Masini|C|Frosinone
+6980|Venturino|C|Genoa
+7409|Meichtry|C|Genoa
+4970|Messias|C|Genoa
+2857|Traorè Hj.|C|Genoa
+5823|Baldanzi|C|Genoa
+6164|Vitinha O.|A|Genoa
+4923|Colombo|A|Genoa
+7453|Havel|A|Genoa
+1926|Di Gennaro|P|Inter
+5116|Martinez Jo.|P|Inter
+2814|Provedel|P|Inter
+4159|Akanji|D|Inter
+2120|Bastoni|D|Inter
+6217|Bisseck|D|Inter
+2514|Stones|D|Inter
+4177|Pavard|D|Inter
+5877|Carlos Augusto|D|Inter
+254|Dimarco|D|Inter
+6274|Diouf|C|Inter
+5301|Luis Henrique|C|Inter
+2194|Calhanoglu|C|Inter
+6503|Stankovic A.|C|Inter
+1870|Barella|C|Inter
+2529|Mkhitaryan|C|Inter
+7070|Sucic P.|C|Inter
+152|Zielinski|C|Inter
+2848|Frattesi|C|Lazio
+6669|Bonny|A|Inter
+7071|Esposito F.P.|A|Inter
+2764|Martinez L.|A|Inter
+4871|Thuram|A|Inter
+5876|Di Gregorio|P|Juventus
+218|Perin|P|Juventus
+1930|Pinsoglio|P|Juventus
+2788|Bremer|D|Juventus
+5831|Gatti|D|Juventus
+294|Rugani|D|Juventus
+4976|Kalulu|D|Juventus
+6766|Kelly L.|D|Juventus
+4657|Celik|D|Juventus
+6039|Cabal|D|Juventus
+5520|Cambiaso|D|Juventus
+827|Locatelli|C|Juventus
+4973|McKennie|C|Juventus
+5562|Thuram K.|C|Juventus
+4911|Douglas Luiz|C|Juventus
+5813|Miretti|C|Juventus
+5685|Koopmeiners|C|Juventus
+5761|Zhegrova|C|Juventus
+7436|Alajbegovic|C|Juventus
+6884|Conceicao|C|Juventus
+2832|Boga|A|Juventus
+6822|Ekhator|A|Juventus
+6434|Yildiz|A|Juventus
+5544|David|A|Juventus
+5951|Kolo Muani|A|Juventus
+6482|Mandas|P|Lazio
+7337|Motta|P|Lazio
+7534|Renzetti|P|Lazio
+6320|Doekhi|D|Lazio
+460|Romagnoli|D|Lazio
+7012|Provstgaard|D|Lazio
+327|Patric|D|Lazio
+7131|Floriani Mussolini|D|Lazio
+2263|Lazzari|D|Lazio
+4817|Pedraza|D|Lazio
+2728|Pellegrini Lu.|D|Lazio
+5620|Tavares N.|D|Lazio
+2188|Marusic|D|Lazio
+6191|Belahyane|C|Lazio
+333|Cataldi|C|Lazio
+4459|Rovella|C|Lazio
+6629|Dele-Bashiru|C|Lazio
+7314|Taylor K.|C|Lazio
+7345|Przyborek|C|Lazio
+5500|Cancellieri|C|Lazio
+6398|Isaksen|C|Lazio
+632|Zaccagni|C|Lazio
+5672|Dia|A|Lazio
+6556|Noslin|A|Lazio
+7313|Ratkov|A|Lazio
+2134|Falcone|P|Lecce
+2401|Fruchtl|P|Lecce
+6523|Samooja|P|Lecce
+6632|Gaspar K.|D|Lecce
+6883|Jean|D|Lecce
+7240|Siebert|D|Lecce
+6989|Tiago Gabriel|D|Lecce
+7164|Perez M.|D|Lecce
+6990|Veiga D.|D|Lecce
+4502|Gallo|D|Lecce
+7182|Ndaba|D|Lecce
+5504|Coulibaly L.|C|Lecce
+7248|Gorter|C|Lecce
+6410|Kaba|C|Lecce
+5457|Maleh|C|Lecce
+7322|Ngom|C|Lecce
+7319|Fofana Sa.|C|Lecce
+6015|Berisha M.|C|Lecce
+7318|Gandelman|C|Lecce
+6549|Pierotti|C|Lecce
+7001|N'Dri|A|Lecce
+5029|Geubbels|A|Lecce
+7252|Stulic|A|Lecce
+4312|Maignan|P|Milan
+2815|Terracciano|P|Milan
+6813|Torriani|P|Milan
+4401|Gabbia|D|Milan
+5833|Gila|D|Milan
+5022|Pavlovic|D|Milan
+4751|Tomori|D|Milan
+5739|De Winter|D|Milan
+7525|Diawara S.|D|Milan
+7211|Athekame|D|Milan
+6496|Bartesaghi|D|Milan
+5273|Estupinan|D|Milan
+4892|Saelemaekers|C|Milan
+4686|Fofana Y.|C|Milan
+2606|Modric|C|Milan
+5453|Ricci S.|C|Milan
+7203|Jashari|C|Milan
+5295|Musah|C|Milan
+4199|Loftus-Cheek|C|Milan
+2379|Rabiot|C|Milan
+4856|Chukwueze|C|Milan
+2423|Pulisic|C|Milan
+4510|Leao|A|Milan
+4728|Nkunku|A|Milan
+6519|Camarda|A|Milan
+7008|Gimenez|A|Milan
+6397|Ramos G.|A|Milan
+6682|Pizzignacco|P|Monza
+7475|Strajnar|P|Monza
+4485|Thiam|P|Monza
+5399|Antov|D|Monza
+2115|Delli Carri|D|Monza
+6659|Lucchesi|D|Monza
+7238|Kouadio|D|Monza
+4925|Carboni A.|D|Monza
+7476|Bakoune|D|Monza
+7485|Mangas|D|Monza
+5838|Birindelli|D|Monza
+5880|Ciurria|C|Monza
+7477|Colombo L.|C|Monza
+2741|Pessina|C|Monza
+6593|Akinsanmiro|C|Monza
+5878|Colpani|C|Monza
+5882|Mota|A|Monza
+2155|Cutrone|A|Monza
+383|Petagna|A|Monza
+7523|Varela G.|A|Monza
+2845|Contini|P|Napoli
+572|Meret|P|Napoli
+2170|Milinkovic-Savic V.|P|Napoli
+6202|Beukema|D|Napoli
+2724|Buongiorno|D|Napoli
+6809|Marianucci|D|Napoli
+6638|Marin R.|D|Napoli
+4409|Rrahmani|D|Napoli
+5840|Olivera|D|Napoli
+2816|Di Lorenzo|D|Napoli
+5427|Gutierrez|D|Napoli
+1852|Spinazzola|D|Napoli
+5481|Mazzocchi|D|Napoli
+5131|Gilmour|C|Napoli
+4287|Lobotka|C|Napoli
+4220|Zambo Anguissa|C|Napoli
+6252|Folorunsho|C|Napoli
+4777|McTominay|C|Napoli
+536|Politano|C|Napoli
+7223|Vergara|C|Napoli
+2517|De Bruyne|C|Napoli
+7351|Santos A.|A|Napoli
+6831|Neres|A|Napoli
+7162|Giovane|A|Napoli
+7120|Lang|A|Napoli
+6052|Hojlund|A|Napoli
+6215|Lucca|A|Napoli
+2531|Lukaku|A|Napoli
+6662|Corvi|P|Parma
+7411|Daffara|P|Parma
+6641|Suzuki|P|Parma
+6663|Circati|D|Parma
+7202|Ndiaye|D|Parma
+7235|Troilo|D|Parma
+5307|Valenti|D|Parma
+6664|Delprato|D|Parma
+6149|Carboni F.|D|Parma
+5862|Valeri|D|Parma
+7255|Britschgi|D|Parma
+7276|Cremaschi|C|Parma
+6898|Keita M.|C|Parma
+4349|Nicolussi Caviglia|C|Parma
+7138|Ordonez C.|C|Parma
+6666|Bernabè|C|Parma
+7209|Sorensen O.|C|Parma
+6207|Almqvist|C|Parma
+7536|Diallo O.|C|Parma
+6984|Ondrejka|C|Parma
+7213|Frigan|A|Parma
+7342|Elphege|A|Parma
+7023|Pellegrino M.|A|Fiorentina
+7048|De Marzi|P|Roma
+610|Gollini|P|Roma
+5841|Svilar|P|Roma
+6631|Ghilardi|D|Roma
+4807|Hermoso|D|Roma
+7529|Koulierakis|D|Roma
+2296|Mancini|D|Roma
+4317|N'Dicka|D|Roma
+7260|Ziolkowski|D|Roma
+6986|Rensch|D|Roma
+4772|Angelino|D|Roma
+7181|Wesley|D|Roma
+779|Cristante|C|Roma
+6271|El Aynaoui|C|Roma
+5589|Konè M.|C|Roma
+6190|Pisilli|C|Roma
+5734|Soulè|A|Roma
+309|Dybala|A|Roma
+6572|Castro S.|A|Roma
+5585|Malen|A|Roma
+6981|Vaz|A|Roma
+4236|Muric|P|Sassuolo
+4518|Russo A.|P|Sassuolo
+4867|Turati|P|Sassuolo
+6672|Idzes|D|Sassuolo
+4374|Walukiewicz|D|Sassuolo
+6985|Candè|D|Sassuolo
+6189|Missori|D|Sassuolo
+5851|Doig|D|Sassuolo
+7156|Pieragnolo|D|Sassuolo
+6219|Boloca|C|Sassuolo
+7157|Iannoni|C|Sassuolo
+6246|Lipani|C|Sassuolo
+2528|Matic|C|Sassuolo
+6717|Konè I.|C|Sassuolo
+6677|Adzic|C|Sassuolo
+7036|Bakola|C|Sassuolo
+5844|Thorstvedt|C|Sassuolo
+5735|Volpato|C|Sassuolo
+531|Berardi|A|Sassuolo
+6060|Laurientè|A|Sassuolo
+7158|Moro L.|A|Sassuolo
+7347|Bowie|A|Sassuolo
+2038|Pinamonti|A|Lazio
+7457|Mascardi|P|Torino
+5320|Paleari|P|Torino
+7363|Siviero|P|Torino
+6642|Coco|D|Torino
+7526|Comert|D|Torino
+6495|Comuzzo|D|Torino
+5010|Ismajli|D|Torino
+252|Biraghi|D|Torino
+6426|Pedersen|D|Torino
+7060|Cacciamani|C|Torino
+7535|Fitz-Jim|C|Torino
+6170|Gineitis|C|Torino
+6005|Ilkhan|C|Torino
+5007|Ilic|C|Lecce
+5888|Casadei|C|Torino
+6889|Anjorin|C|Torino
+6218|Oristanio|C|Torino
+5687|Vlasic|C|Torino
+7183|Aboukhlal|C|Torino
+6827|Njie|C|Torino
+6646|Adams C.|A|Torino
+7349|Kulenovic|A|Torino
+2061|Simeone|A|Torino
+608|Zapata D.|A|Torino
+6462|Okoye|P|Udinese
+543|Padelli|P|Udinese
+5707|Piana|P|Udinese
+4263|Kabasele|D|Udinese
+7356|Mlacic|D|Udinese
+6925|Palma|D|Udinese
+6956|Solet|D|Udinese
+6021|Abankwah|D|Udinese
+6485|Kristensen T.|D|Atalanta
+5994|Ebosse|D|Udinese
+5820|Bertola|D|Udinese
+4994|Vojvoda|D|Udinese
+5527|Zanoli|D|Udinese
+7312|Arizala|D|Udinese
+5555|Kamara H.|D|Udinese
+7392|Camara A.|C|Udinese
+6680|Karlstrom|C|Udinese
+7208|Miller L.|C|Udinese
+7198|Piotrowski|C|Udinese
+6212|Zarraga|C|Udinese
+6684|Ekkelenkamp|C|Udinese
+7418|Chakvetadze|C|Udinese
+6783|Unai Gomez|C|Udinese
+2766|Zaniolo|C|Udinese
+7161|Bayo V.|A|Udinese
+7249|Buksa|A|Udinese
+5637|Davis K.|A|Udinese
+7272|Gueye|A|Udinese
+6671|Grandi|P|Venezia
+7531|Pozzi|P|Venezia
+6248|Stankovic F.|P|Venezia
+7253|Bella-Kotchap|D|Venezia
+7538|Halhal|D|Venezia
+6890|Moreno M.|D|Venezia
+6892|Schingtienne|D|Venezia
+6673|Sverko|D|Venezia
+7454|Gomes|D|Venezia
+7478|Franjic|D|Venezia
+4845|Correia T.|D|Venezia
+6821|Hainaut|D|Venezia
+6681|Sagrado|D|Venezia
+5695|Haps|D|Venezia
+5485|Bjarkason|C|Venezia
+5674|Basic|C|Venezia
+5507|Busio|C|Venezia
+7481|Dagasso|C|Venezia
+526|Duncan|C|Venezia
+5319|Sohm|C|Venezia
+5872|Helgason|C|Venezia
+6994|Perez K.|C|Venezia
+7408|Lisman|A|Venezia
+6904|Yeboah J.|A|Venezia
+7484|Adams A.|A|Venezia
+4387|Adorante|A|Venezia
+7482|Lauberbach|A|Venezia
+7449|Rrahmani Al.|A|Venezia
+7545|Vismara|P|Atalanta
+6727|Couto|D|Como
+5946|Sow|C|Genoa
+2127|Satalino|P|Sassuolo
+7546|Robinson J.|A|Monza
+7078|Mastantuono|C|Fiorentina
+6229|Tourè E.|A|Parma
+530|Pellegrini Lo.|C|Roma
+5641|Chalobah T.|D|Como
+7547|Kevin Carlos|A|Cagliari
+7548|Aurelio|D|Cagliari
+4998|Molina N.|D|Roma
+7550|Grillitsch|C|Frosinone
+7551|Schmid|C|Frosinone
+7557|Penev|P|Lecce
+7554|Romero D.|A|Parma
+4375|Terzic|D|Frosinone
+7329|Obrador|D|Sassuolo
+5982|Spence|D|Inter
+7560|Pisseri|P|Frosinone
+3|Radunovic|P|Cagliari
+7561|Lontani|A|Parma
+2012|Milik|A|Juventus
+7154|Odenthal|D|Sassuolo
+6618|Cissè A.|C|Milan
+6592|Forson O.|C|Monza
+4964|Vicario|P|Juventus
+7568|De Martis|A|Parma
+7556|Mora|C|Roma
+7563|Favasuli|D|Napoli
+4957|Montipò|P|Venezia
+7553|Omar Fayed|D|Frosinone
+4468|Bleve|P|Lecce
+6372|Moreira|C|Milan
+7146|Tourè I.|C|Monza
+7571|Laerke|C|Lecce
+7572|Comotto|C|Milan
+7069|Fortini|D|Torino
+7396|Macchioni|D|Sassuolo
+7573|Cinquegrano|D|Sassuolo
+7574|Foe Ondoa|C|Monza
+7575|Mout|C|Monza
+5172|Jones C.|C|Inter
+7564|Leysen F.|D|Sassuolo
+5812|Terracciano F.|D|Milan
+4479|Elmas|C|Atalanta
+4664|Badiashile|D|Napoli
+7580|Sutalo J.|D|Lazio
+7599|Lulli|D|Roma
+7600|Osmajic|A|Genoa
+7602|Fatah|A|Lecce
+7603|Grabara|P|Juventus
+7604|Maye|D|Monza
+7605|Tchato|D|Frosinone
+6601|Kambwala|D|Como
+7610|Birligea|A|Frosinone
+7611|Mrozek|P|Udinese
+6145|Ngonge|A|Monza
+7612|Bobcek|A|Frosinone`;
+/* ===== END LISTONE ===== */
+
+/* ===== BEGIN COLORI SQUADRE ===== */
+/* Maglia di ogni squadra: colore principale, secondario e motivo (strisce/tinta/fascia). */
+const KIT = {
+  Atalanta:{a:'#1B71B8',b:'#111111',t:'strisce'}, Bologna:{a:'#B01B2E',b:'#17335E',t:'strisce'},
+  Cagliari:{a:'#B0003C',b:'#123063',t:'strisce'}, Como:{a:'#1B4FA0',b:'#FFFFFF',t:'tinta'},
+  Fiorentina:{a:'#6A2C91',b:'#FFFFFF',t:'tinta'}, Frosinone:{a:'#F2C200',b:'#1A4FA0',t:'strisce'},
+  Genoa:{a:'#C0182B',b:'#17376B',t:'strisce'}, Inter:{a:'#1B4FD8',b:'#111111',t:'strisce'},
+  Juventus:{a:'#FFFFFF',b:'#111111',t:'strisce'}, Lazio:{a:'#8CC6E8',b:'#123063',t:'tinta'},
+  Lecce:{a:'#F2C300',b:'#C8102E',t:'strisce'}, Milan:{a:'#C8102E',b:'#111111',t:'strisce'},
+  Monza:{a:'#C8102E',b:'#FFFFFF',t:'tinta'}, Napoli:{a:'#1C9BE0',b:'#FFFFFF',t:'tinta'},
+  Parma:{a:'#FFFFFF',b:'#F5D000',t:'fascia'}, Roma:{a:'#8E1B2E',b:'#E8A31E',t:'tinta'},
+  Sassuolo:{a:'#00A44B',b:'#111111',t:'strisce'}, Torino:{a:'#7A1C22',b:'#E8C24D',t:'tinta'},
+  Udinese:{a:'#FFFFFF',b:'#111111',t:'strisce'}, Venezia:{a:'#111111',b:'#F2A900',t:'tinta'}
+};
+/* ===== END COLORI SQUADRE ===== */
+
+/* ===== BEGIN FONTE IMMAGINI ===== */
+/* Campioncini ufficiali, ricavati dall'id del giocatore.
+   Se l'immagine non arriva, la carta ripiega da sola sulla maglia disegnata.
+   Se un giorno cambiano il token, aggiorna VERSIONE_CAMPIONCINI.
+   Metti FONTE_IMMAGINE = null per usare solo le maglie disegnate. */
+const VERSIONE_CAMPIONCINI = "761";
+const FONTE_IMMAGINE = id => `https://content.fantacalcio.it/web/campioncini/21/card/${id}.png?v=${VERSIONE_CAMPIONCINI}`;
+/* ===== END FONTE IMMAGINI ===== */
+
+/* ===== BEGIN CONFIG FIREBASE ===== */
+/* Incolla qui la configurazione del tuo progetto Firebase.
+   Finché resta vuota, l'app gira in modalità prova (solo schede dello stesso browser). */
+const FIREBASE_CONFIG = {
+  apiKey: "AIzaSyBzmpSuDo8fNZIPjmuOb61G9DAvDmfF7k8",
+  authDomain: "fantabuzzer-a7d96.firebaseapp.com",
+  databaseURL: "https://fantabuzzer-a7d96-default-rtdb.europe-west1.firebasedatabase.app",
+  projectId: "fantabuzzer-a7d96"
+};
+/* ===== END CONFIG FIREBASE ===== */
+
+/* ===== BEGIN REGOLE ===== */
+const REGOLE = { crediti:500, slot:{P:3,D:8,C:8,A:6}, secondiTimer:5 };
+/* ===== END REGOLE ===== */
+</script>
+
+<script type="module">
+/* ===== BEGIN NUCLEO ===== */
+const ORDINE_RUOLI=['P','D','C','A'];
+const NOMI_RUOLI={P:'Portiere',D:'Difensore',C:'Centrocampista',A:'Attaccante'};
+const GIOCATORI=LISTONE_GREZZO.trim().split('\n').map(r=>{
+  const [id,nome,ruolo,club]=r.split('|');
+  return {id,nome,ruolo,club,cerca:nome.toLowerCase()};
+});
+const PER_ID=Object.fromEntries(GIOCATORI.map(g=>[g.id,g]));
+const $=s=>document.querySelector(s);
+const params=new URLSearchParams(location.search);
+let CODICE=(params.get('lega')||'').toUpperCase();
+let IO=params.get('io')||'';
+let RUOLO_VISTA=params.get('vista')||'';
+let STATO=null, ultimoPid=null;
+
+/* ===== BEGIN DISEGNO CAMPIONCINO ===== */
+/* Grafica originale: la maglia della squadra. Di spalle mostra cognome e numero,
+   poi ruota e passa al fronte. Nessuna immagine esterna, funziona anche senza rete. */
+const CORPO = 'M70 74 L54 62 L26 84 L48 122 L66 110 L64 214 Q100 226 136 214 L134 110 L152 122 L174 84 L146 62 L130 74 Q100 94 70 74 Z';
+function chiaro(hex){
+  const n = parseInt(hex.slice(1),16);
+  return (((n>>16)*299 + ((n>>8)&255)*587 + (n&255)*114)/1000) > 150;
+}
+function maglia(g, dietro, numero){
+  const k = KIT[g.club] || {a:'#1B4FA0',b:'#FFFFFF',t:'tinta'};
+  const u = g.id + (dietro?'r':'f');
+  const inchiostro = chiaro(k.a) ? '#111111' : '#FFFFFF';
+  let motivo = '';
+  if (k.t === 'strisce'){
+    for (let x = 34; x < 176; x += 25)
+      motivo += `<rect x="${x}" y="55" width="12.5" height="180" fill="${k.b}"/>`;
+  } else if (k.t === 'fascia'){
+    motivo = `<path d="M20 96 L180 176 L180 210 L20 130 Z" fill="${k.b}"/>`;
+  }
+  const dorso = dietro ? `
+    <text x="100" y="180" text-anchor="middle" font-family="Archivo Black,Impact,sans-serif"
+          font-size="68" fill="${inchiostro}" stroke="${k.b}" stroke-width="1.5" paint-order="stroke">${numero}</text>
+    <text x="100" y="114" text-anchor="middle" font-family="Archivo,Inter,sans-serif" font-weight="700"
+          font-size="13" textLength="74" lengthAdjust="spacingAndGlyphs" fill="${inchiostro}">${g.nome.toUpperCase()}</text>`
+    : `<rect x="119" y="112" width="19" height="19" rx="5" fill="${k.b}" opacity=".9"/>
+       <rect x="125" y="118" width="7" height="7" rx="2" fill="${k.a}"/>`;
+
+  return `<svg viewBox="0 0 200 266" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <clipPath id="c${u}"><path d="${CORPO}"/></clipPath>
+    <linearGradient id="s${u}" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="${k.a}" stop-opacity=".30"/>
+      <stop offset="1" stop-color="#061530" stop-opacity="0"/>
+    </linearGradient>
+    <linearGradient id="v${u}" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#FFFFFF" stop-opacity=".16"/>
+      <stop offset=".55" stop-color="#FFFFFF" stop-opacity="0"/>
+    </linearGradient>
+  </defs>
+  <rect width="200" height="266" fill="#0A1F44"/>
+  <rect width="200" height="266" fill="url(#s${u})"/>
+  <circle cx="100" cy="140" r="88" fill="${k.a}" opacity=".14"/>
+  <g clip-path="url(#c${u})">
+    <rect x="0" y="0" width="200" height="266" fill="${k.a}"/>
+    ${motivo}
+    ${dorso}
+    <rect x="0" y="0" width="200" height="266" fill="url(#v${u})"/>
+  </g>
+  <path d="${CORPO}" fill="none" stroke="#061530" stroke-opacity=".55" stroke-width="2.5"/>
+  <path d="M76 75 Q100 97 124 75 L129 80 Q100 105 71 80 Z" fill="${k.b}" opacity=".95"/>
+  <rect x="0" y="226" width="200" height="40" fill="#061530" opacity=".9"/>
+  <text x="13" y="252" font-family="Inter,sans-serif" font-size="15" font-weight="700" fill="#EAF2FF">${g.nome}</text>
+  <rect x="13" y="13" width="27" height="27" rx="8" fill="#EAF2FF"/>
+  <text x="26.5" y="32.5" text-anchor="middle" font-family="Archivo Black,Impact,sans-serif" font-size="15" fill="#0A1F44">${g.ruolo}</text>
+  <text x="187" y="31" text-anchor="end" font-family="Inter,sans-serif" font-size="10.5"
+        letter-spacing="1.6" font-weight="700" fill="#EAF2FF" opacity=".8">${g.club.toUpperCase()}</text>
+</svg>`;
+}
+function cartaFoto(g){
+  const k = KIT[g.club] || {a:'#1B4FA0',b:'#FFFFFF'};
+  return `<div class="carta-foto" style="--k1:${k.a}">
+    <img alt="" referrerpolicy="no-referrer" src="${FONTE_IMMAGINE(g.id)}">
+    <div class="ruolo">${g.ruolo}</div>
+    <div class="club">${g.club.toUpperCase()}</div>
+    <div class="barra">${g.nome}</div>
+  </div>`;
+}
+function montaCarta(el, g, animare){
+  if(!el) return;
+  const numero=(parseInt(g.id,10)%89)+1;
+  el.innerHTML = `<div class="faccia"></div>
+                  <div class="faccia retro">${maglia(g,true,numero)}</div>`;
+  const fronte = el.querySelector('.faccia');
+  if(typeof FONTE_IMMAGINE === 'function'){
+    fronte.innerHTML = cartaFoto(g);
+    const foto = fronte.querySelector('img');
+    foto.onerror = () => { fronte.innerHTML = maglia(g,false,numero); };
+  } else {
+    fronte.innerHTML = maglia(g,false,numero);
+  }
+  if(animare){ el.classList.remove('entra'); void el.offsetWidth; el.classList.add('entra'); }
+}
+/* ===== END DISEGNO CAMPIONCINO ===== */
+
+/* ---------- deposito ---------- */
+const configurato=!!(FIREBASE_CONFIG.databaseURL&&FIREBASE_CONFIG.apiKey);
+let Deposito;
+if(configurato){
+  const {initializeApp}=await import('https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js');
+  const {getDatabase,ref,onValue,runTransaction}=await import('https://www.gstatic.com/firebasejs/10.12.2/firebase-database.js');
+  const db=getDatabase(initializeApp(FIREBASE_CONFIG));
+  Deposito={
+    ascolta(c,cb){ onValue(ref(db,'leghe/'+c),s=>cb(s.val())); },
+    async muta(c,fn){ await runTransaction(ref(db,'leghe/'+c),cur=>fn(cur)); }
+  };
+}else{
+  const canale=new BroadcastChannel('fantabuzzer');
+  let memoria={}, ascoltatore=null, codiceAscoltato=null;
+  const leggi=c=>{ try{ return JSON.parse(localStorage.getItem('fb:'+c)||'null'); }catch(e){ return memoria[c]??null; } };
+  const scrivi=(c,v)=>{ memoria[c]=v; try{ localStorage.setItem('fb:'+c,JSON.stringify(v)); }catch(e){} };
+  canale.onmessage=e=>{ if(e.data.codice===codiceAscoltato&&ascoltatore) ascoltatore(leggi(e.data.codice)); };
+  Deposito={
+    ascolta(c,cb){ ascoltatore=cb; codiceAscoltato=c; cb(leggi(c)); },
+    async muta(c,fn){ const n=fn(leggi(c)); if(n===undefined) return; scrivi(c,n); canale.postMessage({codice:c}); if(ascoltatore&&codiceAscoltato===c) ascoltatore(n); }
+  };
+  $('#avviso-config').hidden=false;
+  $('#modalita-attiva').textContent='modalità prova';
+}
+
+/* ---------- stato ---------- */
+const statoIniziale=()=>({fase:'asta',regole:REGOLE,squadre:{},ordine:[],turno:0,chiamata:null,rose:{}});
+const rosaDi=s=>(STATO?.rose?.[s])||{};
+const spesiDi=s=>Object.values(rosaDi(s)).reduce((t,a)=>t+a.prezzo,0);
+const creditiDi=s=>REGOLE.crediti-spesiDi(s);
+const contaReparto=(s,r)=>Object.values(rosaDi(s)).filter(a=>a.ruolo===r).length;
+const slotLiberi=s=>ORDINE_RUOLI.reduce((t,r)=>t+(REGOLE.slot[r]-contaReparto(s,r)),0);
+const tettoOfferta=s=>creditiDi(s)-(slotLiberi(s)-1);
+const nomeSquadra=s=>STATO?.squadre?.[s]?.nome||'—';
+const giaPreso=p=>Object.values(STATO?.rose||{}).some(r=>r&&r[p]);
+function squadraDiTurno(){ if(!STATO?.ordine?.length) return null; return STATO.ordine[STATO.turno%STATO.ordine.length]||null; }
+function prossimoTurno(s){
+  const n=s.ordine.length; if(!n) return 0;
+  const totale=ORDINE_RUOLI.reduce((t,r)=>t+REGOLE.slot[r],0);
+  for(let i=1;i<=n;i++){
+    const idx=(s.turno+i)%n, rosa=(s.rose?.[s.ordine[idx]])||{};
+    if(Object.keys(rosa).length<totale) return idx;
+  }
+  return s.turno;
+}
+
+/* ---------- navigazione ---------- */
+function mostra(id){ document.querySelectorAll('.schermo').forEach(s=>s.classList.remove('attivo')); $(id).classList.add('attivo'); }
+function aggiornaUrl(){
+  const p=new URLSearchParams();
+  if(CODICE)p.set('lega',CODICE); if(RUOLO_VISTA)p.set('vista',RUOLO_VISTA); if(IO)p.set('io',IO);
+  history.replaceState(null,'',location.pathname+'?'+p.toString());
+}
+$('#btn-banditore').onclick=()=>{const c=$('#in-lega').value.trim().toUpperCase(); if(!c)return; CODICE=c;RUOLO_VISTA='banditore';aggiornaUrl();avvia();};
+$('#btn-giocatore').onclick=()=>{const c=$('#in-lega').value.trim().toUpperCase(); if(!c)return; CODICE=c;RUOLO_VISTA='squadra';aggiornaUrl();avvia();};
+async function avvia(){
+  Deposito.ascolta(CODICE,d=>{STATO=d;disegna();});
+  await Deposito.muta(CODICE,cur=>cur||statoIniziale());
+  $('#eco-lega').textContent=CODICE; $('#eco-lega-2').textContent=CODICE;
+}
+
+/* ---------- entrata ---------- */
+$('#btn-entra').onclick=async()=>{
+  const nome=$('#in-squadra').value.trim();
+  if(!nome){$('#msg-entrata').textContent='Serve un nome squadra.';return;}
+  const sid='s'+Math.random().toString(36).slice(2,8);
+  let esito='';
+  await Deposito.muta(CODICE,cur=>{
+    const s=cur||statoIniziale();
+    if(Object.values(s.squadre||{}).some(x=>x.nome.toLowerCase()===nome.toLowerCase())){esito='Questo nome è già in uso nella lega.';return s;}
+    s.squadre=s.squadre||{}; s.ordine=s.ordine||[]; s.squadre[sid]={nome}; s.ordine.push(sid);
+    return s;
+  });
+  if(esito){$('#msg-entrata').textContent=esito;return;}
+  IO=sid; aggiornaUrl(); disegna();
+};
+
+/* ===== BEGIN COMANDI BANDITORE ===== */
+$('#btn-rosa').onclick=()=>Deposito.muta(CODICE,s=>{
+  if(!s?.chiamata) return s;
+  const c=s.chiamata;
+  s.rose=s.rose||{}; s.rose[c.sid]=s.rose[c.sid]||{};
+  s.rose[c.sid][c.pid]={nome:c.nome,ruolo:c.ruolo,club:c.club,prezzo:c.offerta};
+  s.chiamata=null; s.turno=prossimoTurno(s);
+  return s;
+});
+$('#btn-continua').onclick=()=>Deposito.muta(CODICE,s=>{
+  if(!s?.chiamata) return s;
+  s.chiamata.stato='aperta'; s.chiamata.ts=Date.now();
+  return s;
+});
+$('#btn-annulla').onclick=()=>Deposito.muta(CODICE,s=>{ if(s)s.chiamata=null; return s; });
+$('#btn-salta').onclick=()=>Deposito.muta(CODICE,s=>{ if(!s)return s; s.chiamata=null; s.turno=prossimoTurno(s); return s; });
+function togliSquadra(sid){
+  if(!confirm(`Togliere ${nomeSquadra(sid)} dalla lega? La sua rosa viene persa.`)) return;
+  Deposito.muta(CODICE,s=>{
+    if(!s) return s;
+    delete s.squadre[sid];
+    if(s.rose) delete s.rose[sid];
+    s.ordine=(s.ordine||[]).filter(x=>x!==sid);
+    if(s.chiamata&&s.chiamata.sid===sid) s.chiamata=null;
+    if(s.ordine.length) s.turno=s.turno%s.ordine.length; else s.turno=0;
+    return s;
+  });
+}
+$('#btn-azzera').onclick=()=>{
+  if(!confirm('Azzerare tutta la lega? Spariscono squadre, rose e asta in corso.')) return;
+  Deposito.muta(CODICE,()=>statoIniziale());
+};
+/* ===== END COMANDI BANDITORE ===== */
+
+/* ---------- chiamata ---------- */
+$('#in-cerca').oninput=e=>disegnaRisultati(e.target.value.trim().toLowerCase());
+function disegnaRisultati(q){
+  const box=$('#risultati');
+  if(q.length<2){box.innerHTML='';return;}
+  const trovati=GIOCATORI.filter(g=>g.cerca.includes(q)).slice(0,40);
+  box.innerHTML=trovati.map(g=>{
+    const preso=giaPreso(g.id), pieno=contaReparto(IO,g.ruolo)>=REGOLE.slot[g.ruolo];
+    return `<button class="risultato" data-pid="${g.id}" ${preso||pieno?'disabled':''}>
+      <span><span class="r-nome">${g.nome}</span><br><span class="r-club">${g.club}${preso?' · già preso':pieno?' · reparto pieno':''}</span></span>
+      <span class="tag ${g.ruolo}">${g.ruolo}</span></button>`;
+  }).join('')||'<div class="nota" style="padding:12px">Nessun giocatore con questo nome.</div>';
+  box.querySelectorAll('.risultato:not(:disabled)').forEach(b=>b.onclick=()=>chiama(b.dataset.pid));
+}
+async function chiama(pid){
+  const g=PER_ID[pid];
+  await Deposito.muta(CODICE,s=>{
+    if(!s||s.chiamata) return s;
+    if(s.ordine[s.turno%s.ordine.length]!==IO) return s;
+    if(Object.values(s.rose||{}).some(r=>r&&r[pid])) return s;
+    s.chiamata={pid,nome:g.nome,ruolo:g.ruolo,club:g.club,offerta:1,sid:IO,ts:Date.now(),stato:'aperta'};
+    return s;
+  });
+  $('#in-cerca').value=''; $('#risultati').innerHTML='';
+}
+
+/* ---------- rilanci ---------- */
+document.querySelectorAll('.rilancio').forEach(b=>b.onclick=()=>offri((STATO?.chiamata?.offerta||0)+Number(b.dataset.passo)));
+$('#btn-offri').onclick=()=>{const v=parseInt($('#in-offerta').value,10); if(!isNaN(v))offri(v); $('#in-offerta').value='';};
+async function offri(valore){
+  const msg=$('#t-msg'), c=STATO?.chiamata;
+  if(!c) return;
+  if(c.stato==='sospesa'){ msg.textContent='Tempo scaduto: decide il banditore.'; return; }
+  if(contaReparto(IO,c.ruolo)>=REGOLE.slot[c.ruolo]){ msg.textContent='Hai già il reparto pieno.'; return; }
+  if(valore>tettoOfferta(IO)){ msg.textContent=`Al massimo puoi offrire ${tettoOfferta(IO)}: devi lasciare 1 credito per ogni slot rimasto.`; return; }
+  msg.textContent='';
+  await Deposito.muta(CODICE,s=>{
+    if(!s?.chiamata||s.chiamata.stato==='sospesa') return s;
+    if(valore<=s.chiamata.offerta) return s;
+    s.chiamata.offerta=valore; s.chiamata.sid=IO; s.chiamata.ts=Date.now();
+    return s;
+  });
+}
+
+/* ---------- disegno ---------- */
+function disegna(){
+  if(!STATO) return;
+  if(RUOLO_VISTA==='banditore'){ mostra('#s-banditore'); disegnaBanditore(); }
+  else if(RUOLO_VISTA==='squadra'){
+    if(!IO||!STATO.squadre?.[IO]){ mostra('#s-entrata'); disegnaEntrata(); }
+    else { mostra('#s-telefono'); disegnaTelefono(); }
+  }
+}
+function disegnaEntrata(){
+  const n=Object.keys(STATO.squadre||{}).length;
+  $('#gia-dentro').innerHTML=n
+    ? `<div class="titolo-colonna">Già in lega (${n})</div>`+STATO.ordine.map(s=>`<div class="slot">${nomeSquadra(s)}</div>`).join('')
+    : '<p class="nota">Sei il primo. L\'ordine di chiamata segue l\'ordine di entrata.</p>';
+}
+function disegnaBanditore(){
+  const t=squadraDiTurno(), c=STATO.chiamata;
+  $('#chi-chiama').textContent=t?nomeSquadra(t):'nessuno';
+  $('#conta-squadre').textContent=(STATO.ordine?.length||0)+' squadre';
+  $('#palco-vuoto').hidden=!!c;
+  $('#palco-pieno').hidden=!c;
+  $('#palco-pieno').style.display=c?'flex':'none';
+  $('#comandi').hidden=!c;
+  if(c){
+    const sospesa=c.stato==='sospesa';
+    if(ultimoPid!==c.pid){ montaCarta($('#carta'),PER_ID[c.pid],true); ultimoPid=c.pid; }
+    $('#b-nome').textContent=c.nome;
+    $('#b-dett').textContent=`${NOMI_RUOLI[c.ruolo]} · ${c.club}`;
+    const cif=$('#b-offerta');
+    if(cif.textContent!==String(c.offerta)){ cif.textContent=c.offerta; cif.classList.remove('battito'); void cif.offsetWidth; cif.classList.add('battito'); }
+    $('#b-etichetta').textContent=sospesa?'Va a':'Offerta di';
+    $('#b-offerente').textContent=nomeSquadra(c.sid);
+    $('#fascia').hidden=!sospesa;
+    $('#anello').classList.toggle('fermo',sospesa);
+    $('#btn-continua').style.display=sospesa?'block':'none';
+  } else ultimoPid=null;
+  $('#lista-squadre').innerHTML=(STATO.ordine||[]).map(sid=>{
+    const rep=ORDINE_RUOLI.map(r=>{const n=contaReparto(sid,r),m=REGOLE.slot[r];return `<span class="${n>=m?'pieno':''}">${r} ${n}/${m}</span>`;}).join('');
+    return `<div class="squadra-riga ${sid===t?'tocca':''}">
+      <div class="squadra-nome">${nomeSquadra(sid)}</div>
+      <div class="squadra-crediti">${creditiDi(sid)}</div>
+      <button class="togli" data-sid="${sid}" title="Togli ${nomeSquadra(sid)} dalla lega">×</button>
+      <div class="reparti">${rep}</div></div>`;
+  }).join('');
+  $('#lista-squadre').querySelectorAll('.togli').forEach(b=>{
+    b.onclick=()=>togliSquadra(b.dataset.sid);
+  });
+}
+function disegnaTelefono(){
+  $('#t-nome-squadra').textContent=nomeSquadra(IO);
+  $('#t-crediti').innerHTML=`${creditiDi(IO)}<small>crediti</small>`;
+  const c=STATO.chiamata, mioTurno=squadraDiTurno()===IO;
+  $('#t-asta').hidden=!c;
+  $('#t-chiamata').hidden=!!c||!mioTurno;
+  $('#t-attesa').hidden=!!c||mioTurno;
+  if(!c&&!mioTurno) $('#t-attesa-chi').textContent=nomeSquadra(squadraDiTurno());
+  if(c){
+    const sospesa=c.stato==='sospesa', mio=c.sid===IO;
+    if(ultimoPid!==c.pid){ montaCarta($('#carta-t'),PER_ID[c.pid],true); ultimoPid=c.pid; }
+    $('#t-chi').textContent=mio?'Hai chiamato tu':`Chiamato da ${nomeSquadra(c.sid)}`;
+    $('#t-nome').textContent=c.nome;
+    $('#t-sotto').textContent=`${NOMI_RUOLI[c.ruolo]} · ${c.club}`;
+    const p=$('#t-prezzo');
+    if(p.textContent!==String(c.offerta)){ p.textContent=c.offerta; p.classList.remove('battito'); void p.offsetWidth; p.classList.add('battito'); }
+    $('#t-di').textContent=sospesa
+      ? (mio?'Aggiudicato a te — attendi il banditore':`Aggiudicato a ${nomeSquadra(c.sid)}`)
+      : (mio?'Offerta tua':`Offerta di ${nomeSquadra(c.sid)}`);
+    $('#t-di').style.color=sospesa?'var(--ok)':(mio?'var(--brand)':'var(--carta)');
+    const bloccato=sospesa||mio||contaReparto(IO,c.ruolo)>=REGOLE.slot[c.ruolo];
+    document.querySelectorAll('.rilancio').forEach(b=>b.disabled=bloccato);
+    $('#btn-offri').disabled=bloccato;
+  } else ultimoPid=null;
+  $('#t-rosa').innerHTML=ORDINE_RUOLI.map(r=>{
+    const presi=Object.values(rosaDi(IO)).filter(a=>a.ruolo===r), righe=[];
+    for(let i=0;i<REGOLE.slot[r];i++){
+      const a=presi[i];
+      righe.push(a?`<div class="slot"><span>${a.nome}</span><b>${a.prezzo}</b></div>`
+                  :`<div class="slot libero"><span>libero</span></div>`);
+    }
+    return `<div class="reparto"><h4>${NOMI_RUOLI[r]==='Portiere'?'Portieri':NOMI_RUOLI[r]+'i'}</h4>${righe.join('')}</div>`;
+  }).join('');
+}
+
+/* ===== BEGIN TIMER ===== */
+/* Allo scadere il giocatore resta all'ultimo offerente e l'asta va in "sospesa".
+   La transizione la scrive solo il tabellone del banditore, così non fa a botte con i telefoni. */
+const CIRC=2*Math.PI*46;
+let scattoInCorso=false;
+function battitoTempo(){
+  const c=STATO?.chiamata;
+  if(c){
+    const rimasto=Math.max(0,REGOLE.secondiTimer-(Date.now()-c.ts)/1000);
+    const quota=c.stato==='sospesa'?0:rimasto/REGOLE.secondiTimer;
+    const anello=$('#anello');
+    if(anello){ anello.setAttribute('stroke-dasharray',CIRC); anello.setAttribute('stroke-dashoffset',CIRC*(1-(c.stato==='sospesa'?1:quota))); }
+    if(RUOLO_VISTA==='banditore'&&c.stato!=='sospesa'&&rimasto<=0&&!scattoInCorso){
+      scattoInCorso=true;
+      Deposito.muta(CODICE,s=>{ if(s?.chiamata&&s.chiamata.stato!=='sospesa') s.chiamata.stato='sospesa'; return s; })
+        .finally(()=>{scattoInCorso=false;});
+    }
+  }
+  requestAnimationFrame(battitoTempo);
+}
+requestAnimationFrame(battitoTempo);
+/* ===== END TIMER ===== */
+
+if(CODICE&&RUOLO_VISTA){ $('#in-lega').value=CODICE; avvia(); }
+/* ===== END NUCLEO ===== */
+</script>
+</body>
+</html>
