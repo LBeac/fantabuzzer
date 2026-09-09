@@ -1027,6 +1027,7 @@ async function avvia(){
   Deposito.ascolta(CODICE,d=>{STATO=d;disegna();});
   await Deposito.muta(CODICE,cur=>cur||statoIniziale());
   $('#eco-lega').textContent=CODICE; $('#eco-lega-2').textContent=CODICE;
+  tieniSveglio();
 }
 
 /* ---------- entrata ---------- */
@@ -1275,6 +1276,17 @@ function battitoTempo(){
 }
 requestAnimationFrame(battitoTempo);
 /* ===== END TIMER ===== */
+
+/* ===== BEGIN SCHERMO SVEGLIO ===== */
+/* Impedisce al telefono di bloccarsi durante le attese dell'asta. */
+let sveglia=null;
+async function tieniSveglio(){
+  try{ if('wakeLock' in navigator) sveglia=await navigator.wakeLock.request('screen'); }catch(e){}
+}
+document.addEventListener('visibilitychange',()=>{
+  if(document.visibilityState==='visible' && CODICE) tieniSveglio();
+});
+/* ===== END SCHERMO SVEGLIO ===== */
 
 if(CODICE&&RUOLO_VISTA){ $('#in-lega').value=CODICE; avvia(); }
 /* ===== END NUCLEO ===== */
