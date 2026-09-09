@@ -117,7 +117,9 @@ input{font-family:inherit;font-size:16px}
 .mini:hover{color:var(--allarme);border-color:var(--allarme)}
 .togli{width:24px;height:24px;border-radius:6px;color:var(--carta-fioca);font-size:16px;line-height:1;border:1px solid var(--linea)}
 .togli:hover{color:var(--allarme);border-color:var(--allarme)}
-.squadra-riga{grid-template-columns:1fr auto auto}
+.squadra-riga{grid-template-columns:1fr auto auto auto}
+.scarica-uno{width:24px;height:24px;border-radius:6px;color:var(--carta-fioca);font-size:14px;border:1px solid var(--linea)}
+.scarica-uno:hover{color:var(--ok);border-color:var(--ok)}
 .squadra-nome{font-weight:700;font-size:14px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .squadra-crediti{font-family:var(--display);font-size:19px;color:var(--brand-tenue)}
 .reparti{grid-column:1/-1;display:flex;gap:8px;font-size:11px;color:var(--carta-fioca)}
@@ -1057,22 +1059,29 @@ $('#btn-azzera').onclick=()=>{
   Deposito.muta(CODICE,()=>statoIniziale());
 };
 /* ===== BEGIN EXPORT ROSE ===== */
-$('#btn-scarica').onclick=()=>{
-  if(!STATO?.ordine?.length) return;
+/* Formato di Leghe FC: prima riga "$,$,$", poi una riga per giocatore
+   con nome squadra, id ufficiale del calciatore e costo. Nessuna intestazione. */
+function csvRose(sids){
   const peso={P:0,D:1,C:2,A:3};
-  const righe=[['Squadra','Id','Calciatore','Ruolo','Club','Prezzo']];
-  let totale=0;
-  for(const sid of STATO.ordine){
+  const righe=['$,$,$'];
+  for(const sid of sids){
+    const nome=nomeSquadra(sid).replace(/[,\r\n]/g,' ').trim();
     const rosa=Object.entries(rosaDi(sid))
       .sort((x,y)=>peso[x[1].ruolo]-peso[y[1].ruolo] || y[1].prezzo-x[1].prezzo);
-    for(const [pid,a] of rosa){ righe.push([nomeSquadra(sid),pid,a.nome,a.ruolo,a.club,a.prezzo]); totale++; }
+    for(const [pid,a] of rosa) righe.push(`${nome},${pid},${a.prezzo}`);
   }
-  if(!totale){ alert('Non ci sono ancora rose da esportare.'); return; }
-  const csv=righe.map(r=>r.map(c=>'"'+String(c).replace(/"/g,'""')+'"').join(',')).join('\r\n');
-  const url=URL.createObjectURL(new Blob(['\ufeff'+csv],{type:'text/csv;charset=utf-8'}));
+  return righe.length>1 ? righe.join('\n')+'\n' : null;
+}
+function scarica(testo,nomeFile){
+  const url=URL.createObjectURL(new Blob([testo],{type:'text/csv;charset=utf-8'}));
   const a=document.createElement('a');
-  a.href=url; a.download='rose-'+CODICE+'.csv'; a.click();
+  a.href=url; a.download=nomeFile; a.click();
   setTimeout(()=>URL.revokeObjectURL(url),2000);
+}
+$('#btn-scarica').onclick=()=>{
+  const t=csvRose(STATO?.ordine||[]);
+  if(!t){ alert('Non ci sono ancora rose da esportare.'); return; }
+  scarica(t,'rose-'+CODICE+'.csv');
 };
 /* ===== END EXPORT ROSE ===== */
 /* ===== END COMANDI BANDITORE ===== */
@@ -1162,11 +1171,18 @@ function disegnaBanditore(){
     return `<div class="squadra-riga ${sid===t?'tocca':''}">
       <div class="squadra-nome">${nomeSquadra(sid)}</div>
       <div class="squadra-crediti">${creditiDi(sid)}</div>
-      <button class="togli" data-sid="${sid}" title="Togli ${nomeSquadra(sid)} dalla lega">×</button>
+      <button class="scarica-uno" data-sid="${sid}" title="Scarica solo la rosa di ${nomeSquadra(sid)}">↓</button><button class="togli" data-sid="${sid}" title="Togli ${nomeSquadra(sid)} dalla lega">×</button>
       <div class="reparti">${rep}</div></div>`;
   }).join('');
   $('#lista-squadre').querySelectorAll('.togli').forEach(b=>{
     b.onclick=()=>togliSquadra(b.dataset.sid);
+  });
+  $('#lista-squadre').querySelectorAll('.scarica-uno').forEach(b=>{
+    b.onclick=()=>{
+      const t=csvRose([b.dataset.sid]);
+      if(!t){ alert('Questa squadra non ha ancora giocatori.'); return; }
+      scarica(t,'rosa-'+nomeSquadra(b.dataset.sid).replace(/[^a-zA-Z0-9]+/g,'-')+'.csv');
+    };
   });
 }
 function disegnaTelefono(){
