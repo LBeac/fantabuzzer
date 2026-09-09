@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
-<title>Fantabuzzer</title>
+<title>Fantatrmn</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Archivo:wght@600;700&family=Archivo+Black&family=Inter:wght@400;500;700&display=swap" rel="stylesheet">
@@ -166,9 +166,9 @@ input{font-family:inherit;font-size:16px}
 <body>
 
 <section id="s-home" class="schermo attivo">
-  <div class="testata"><div class="marchio">FANTA<span>BUZZER</span></div><div class="meta" id="modalita-attiva">—</div></div>
+  <div class="testata"><div class="marchio">FANTA<span>TRMN</span></div><div class="meta" id="modalita-attiva">—</div></div>
   <div class="centro">
-    <h1 class="titolone">L'asta<em>senza urla</em></h1>
+    <h1 class="titolone">Fanta<em style="display:inline">trmn</em></h1>
     <p class="sottotitolo">Ognuno chiama e rilancia dal telefono. Il tabellone sta sulla TV. Alla fine le rose escono già pronte.</p>
     <div id="avviso-config" class="avviso" hidden><b>Modalità prova.</b> Firebase non è configurato: la sincronizzazione funziona solo tra schede dello stesso browser. Ottimo per provare, inutilizzabile la sera dell'asta.</div>
     <label class="campo-label" for="in-lega">Codice lega</label>
@@ -180,7 +180,7 @@ input{font-family:inherit;font-size:16px}
 </section>
 
 <section id="s-banditore" class="schermo">
-  <div class="testata"><div class="marchio">FANTA<span>BUZZER</span></div>
+  <div class="testata"><div class="marchio">FANTA<span>TRMN</span></div>
     <div class="meta"><span id="eco-lega"></span> · <span id="conta-squadre"></span></div></div>
   <div class="plancia">
     <div class="pannello">
@@ -210,14 +210,14 @@ input{font-family:inherit;font-size:16px}
       <div class="comandi"><button class="bottone fantasma" id="btn-salta">Salta il turno</button></div>
     </div>
     <div class="pannello">
-      <div class="titolo-colonna"><span>Squadre</span><button class="mini" id="btn-azzera">Azzera lega</button></div>
+      <div class="titolo-colonna"><span>Squadre</span><span><button class="mini" id="btn-scarica">Scarica rose</button> <button class="mini" id="btn-azzera">Azzera lega</button></span></div>
       <div id="lista-squadre"></div>
     </div>
   </div>
 </section>
 
 <section id="s-entrata" class="schermo">
-  <div class="testata"><div class="marchio">FANTA<span>BUZZER</span></div><div class="meta" id="eco-lega-2"></div></div>
+  <div class="testata"><div class="marchio">FANTA<span>TRMN</span></div><div class="meta" id="eco-lega-2"></div></div>
   <div class="centro">
     <h1 class="titolone" style="font-size:clamp(32px,9vw,48px)">Come ti<em>chiami?</em></h1>
     <label class="campo-label" for="in-squadra">Nome della tua fantasquadra</label>
@@ -270,7 +270,7 @@ input{font-family:inherit;font-size:16px}
 
 <script>
 /* ===== BEGIN LISTONE ===== */
-/* Listone 2026/27, formato Leghe FC: id|nome|ruolo|squadra.
+/* Listone 2026/27 a mercato chiuso, formato Leghe FC: id|nome|ruolo|squadra.
    Per cambiare stagione sostituisci il contenuto di questa stringa. */
 const LISTONE_GREZZO = `4431|Carnesecchi|P|Atalanta
 2297|Rossi F.|P|Atalanta
@@ -284,10 +284,10 @@ const LISTONE_GREZZO = `4431|Carnesecchi|P|Atalanta
 4887|Bellanova|D|Atalanta
 554|Zappacosta|D|Atalanta
 7219|Bernasconi|D|Atalanta
-22|De Roon|C|Atalanta
+22|De Roon|C|Roma
 5792|Ederson D.S.|C|Atalanta
 4364|Gaetano|C|Atalanta
-6024|Sulemana I.|C|Atalanta
+6024|Sulemana I.|C|Sassuolo
 2077|Pasalic|C|Atalanta
 5119|Samardzic|C|Atalanta
 5422|Zalewski|C|Atalanta
@@ -316,7 +316,7 @@ const LISTONE_GREZZO = `4431|Carnesecchi|P|Atalanta
 6054|Moro N.|C|Bologna
 5298|Pobega|C|Bologna
 184|Bernardeschi|C|Bologna
-6844|Rowe|C|Bologna
+6844|Rowe|C|Atalanta
 2765|Odgaard|C|Bologna
 4436|Cambiaghi|C|Bologna
 6895|Dominguez B.|C|Sassuolo
@@ -343,20 +343,20 @@ const LISTONE_GREZZO = `4431|Carnesecchi|P|Atalanta
 6010|Fazzini|C|Cagliari
 6640|Felici|C|Cagliari
 7338|Albarracin|A|Cagliari
-4463|Esposito Se.|A|Cagliari
+4463|Esposito Se.|A|Sassuolo
 6243|Borrelli|A|Cagliari
 7374|Mendy P.|A|Cagliari
 6598|Mutandwa|A|Cagliari
 7317|Trepy|A|Cagliari
 6966|Butez|P|Como
-7301|Tornqvist|P|Como
+7301|Tornqvist|P|Monza
 2809|Vigorito|P|Como
 418|Goldaniga|D|Como
 6893|Kempf|D|Como
 6869|Ramon|D|Como
 7407|Cuenca A.|D|Como
 7014|Smolcic I.|D|Como
-6896|Van Der Brempt|D|Como
+6896|Van Der Brempt|D|Sassuolo
 7414|Kaiki|D|Como
 6867|Valle|D|Como
 7412|Milla|C|Como
@@ -389,13 +389,13 @@ const LISTONE_GREZZO = `4431|Carnesecchi|P|Atalanta
 6531|Jimenez A.|D|Fiorentina
 4465|Fagioli|C|Fiorentina
 7464|Oulai|C|Fiorentina
-1933|Mandragora|C|Fiorentina
+1933|Mandragora|C|Torino
 6294|Ndour|C|Fiorentina
 6908|Atta|C|Fiorentina
 4947|Brescianini|C|Fiorentina
 6206|Fabbian|C|Parma
-5800|Gudmundsson A.|C|Fiorentina
-2097|Kean|A|Fiorentina
+5800|Gudmundsson A.|C|Lazio
+2097|Kean|A|Como
 4359|Piccoli|A|Bologna
 7463|Desplanches|P|Frosinone
 7466|Lolic|P|Frosinone
@@ -559,7 +559,7 @@ const LISTONE_GREZZO = `4431|Carnesecchi|P|Atalanta
 4892|Saelemaekers|C|Milan
 4686|Fofana Y.|C|Milan
 2606|Modric|C|Milan
-5453|Ricci S.|C|Milan
+5453|Ricci S.|C|Como
 7203|Jashari|C|Milan
 5295|Musah|C|Milan
 4199|Loftus-Cheek|C|Milan
@@ -603,11 +603,11 @@ const LISTONE_GREZZO = `4431|Carnesecchi|P|Atalanta
 2816|Di Lorenzo|D|Napoli
 5427|Gutierrez|D|Napoli
 1852|Spinazzola|D|Napoli
-5481|Mazzocchi|D|Napoli
+5481|Mazzocchi|D|Venezia
 5131|Gilmour|C|Napoli
 4287|Lobotka|C|Napoli
 4220|Zambo Anguissa|C|Napoli
-6252|Folorunsho|C|Napoli
+6252|Folorunsho|C|Monza
 4777|McTominay|C|Napoli
 536|Politano|C|Napoli
 7223|Vergara|C|Napoli
@@ -650,7 +650,7 @@ const LISTONE_GREZZO = `4431|Carnesecchi|P|Atalanta
 7529|Koulierakis|D|Roma
 2296|Mancini|D|Roma
 4317|N'Dicka|D|Roma
-7260|Ziolkowski|D|Roma
+7260|Ziolkowski|D|Monza
 6986|Rensch|D|Roma
 4772|Angelino|D|Roma
 7181|Wesley|D|Roma
@@ -705,7 +705,7 @@ const LISTONE_GREZZO = `4431|Carnesecchi|P|Atalanta
 6218|Oristanio|C|Torino
 5687|Vlasic|C|Torino
 7183|Aboukhlal|C|Torino
-6827|Njie|C|Torino
+6827|Njie|C|Fiorentina
 6646|Adams C.|A|Torino
 7349|Kulenovic|A|Torino
 2061|Simeone|A|Torino
@@ -804,6 +804,7 @@ const LISTONE_GREZZO = `4431|Carnesecchi|P|Atalanta
 7571|Laerke|C|Lecce
 7572|Comotto|C|Milan
 7069|Fortini|D|Torino
+6537|Goglichidze|D|Monza
 7396|Macchioni|D|Sassuolo
 7573|Cinquegrano|D|Sassuolo
 7574|Foe Ondoa|C|Monza
@@ -814,6 +815,7 @@ const LISTONE_GREZZO = `4431|Carnesecchi|P|Atalanta
 4479|Elmas|C|Atalanta
 4664|Badiashile|D|Napoli
 7580|Sutalo J.|D|Lazio
+5462|Ciervo|C|Cagliari
 7599|Lulli|D|Roma
 7600|Osmajic|A|Genoa
 7602|Fatah|A|Lecce
@@ -824,7 +826,46 @@ const LISTONE_GREZZO = `4431|Carnesecchi|P|Atalanta
 7610|Birligea|A|Frosinone
 7611|Mrozek|P|Udinese
 6145|Ngonge|A|Monza
-7612|Bobcek|A|Frosinone`;
+4179|Gonzalez N.|C|Juventus
+7612|Bobcek|A|Frosinone
+7615|Drobnic|D|Parma
+1850|Kessiè|C|Atalanta
+6534|Perri|P|Torino
+5675|Theate|D|Bologna
+4705|Balerdi|D|Roma
+6826|Dembelè A.|D|Lecce
+7579|Massolin|C|Cagliari
+801|Gagliardini|C|Cagliari
+7618|Hutchinson|C|Milan
+7619|Monteiro J.|C|Lecce
+256|Juan Jesus|D|Venezia
+7220|Belghali|D|Torino
+4147|Caleta-Car|D|Sassuolo
+7092|Jovanovic|C|Udinese
+4137|Diego Carlos|D|Parma
+5680|Sarr P.|C|Juventus
+2874|Ghidotti|P|Parma
+7620|Zeballos|A|Monza
+7621|Sugawara|D|Cagliari
+5694|Beto|A|Fiorentina
+7622|Robinho Junior|A|Genoa
+6833|Mbangula|C|Bologna
+5742|Drameh|D|Genoa
+6752|Woltemade|A|Juventus
+7623|Gnonto|A|Fiorentina
+7624|Braganca|C|Torino
+5751|Patterson|D|Torino
+7232|Fernandez T.|C|Venezia
+7625|Goncalves P.|C|Fiorentina
+5336|Nzola|A|Cagliari
+6344|Sanchez Ro.|P|Como
+7626|Pompei|P|Atalanta
+795|El Shaarawy|C|Genoa
+7627|Enem|A|Bologna
+2169|Rodriguez R.|D|Torino
+6047|Ehizibue|D|Genoa
+7628|Sierro|C|Parma
+6319|Leite|D|Lazio`;
 /* ===== END LISTONE ===== */
 
 /* ===== BEGIN COLORI SQUADRE ===== */
@@ -848,7 +889,7 @@ const KIT = {
    Se l'immagine non arriva, la carta ripiega da sola sulla maglia disegnata.
    Se un giorno cambiano il token, aggiorna VERSIONE_CAMPIONCINI.
    Metti FONTE_IMMAGINE = null per usare solo le maglie disegnate. */
-const VERSIONE_CAMPIONCINI = "761";
+const VERSIONE_CAMPIONCINI = "817";
 const FONTE_IMMAGINE = id => `https://content.fantacalcio.it/web/campioncini/21/card/${id}.png?v=${VERSIONE_CAMPIONCINI}`;
 /* ===== END FONTE IMMAGINI ===== */
 
@@ -1077,6 +1118,25 @@ $('#btn-azzera').onclick=()=>{
   if(!confirm('Azzerare tutta la lega? Spariscono squadre, rose e asta in corso.')) return;
   Deposito.muta(CODICE,()=>statoIniziale());
 };
+/* ===== BEGIN EXPORT ROSE ===== */
+$('#btn-scarica').onclick=()=>{
+  if(!STATO?.ordine?.length) return;
+  const peso={P:0,D:1,C:2,A:3};
+  const righe=[['Squadra','Id','Calciatore','Ruolo','Club','Prezzo']];
+  let totale=0;
+  for(const sid of STATO.ordine){
+    const rosa=Object.entries(rosaDi(sid))
+      .sort((x,y)=>peso[x[1].ruolo]-peso[y[1].ruolo] || y[1].prezzo-x[1].prezzo);
+    for(const [pid,a] of rosa){ righe.push([nomeSquadra(sid),pid,a.nome,a.ruolo,a.club,a.prezzo]); totale++; }
+  }
+  if(!totale){ alert('Non ci sono ancora rose da esportare.'); return; }
+  const csv=righe.map(r=>r.map(c=>'"'+String(c).replace(/"/g,'""')+'"').join(',')).join('\r\n');
+  const url=URL.createObjectURL(new Blob(['\ufeff'+csv],{type:'text/csv;charset=utf-8'}));
+  const a=document.createElement('a');
+  a.href=url; a.download='rose-'+CODICE+'.csv'; a.click();
+  setTimeout(()=>URL.revokeObjectURL(url),2000);
+};
+/* ===== END EXPORT ROSE ===== */
 /* ===== END COMANDI BANDITORE ===== */
 
 /* ---------- chiamata ---------- */
